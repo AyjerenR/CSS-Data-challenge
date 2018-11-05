@@ -20,29 +20,30 @@ setwd(dirname(current_path))
 #lading data
 load("../Data/complete_tweets.RData") 
 everypol_bundestag = 
-  read_csv("../Auxiliary datasets/everypolitican_bundestag19.csv", 
+  read_csv("/Users/arminmertens/Desktop/everypolitican_bundestag19.csv", 
            col_names = TRUE) ##getting everypolitican data
 
-twitterpols=everypol_bundestag%>%filter(!is.na(twitter))
+twitterpols <- everypol_bundestag %>%
+  filter(!is.na(twitter))
 
-tweets_by_politicians=
-  all%>%filter(screen_name%in%everypol_bundestag$twitter)
+tweets_by_politicians <- all %>% 
+  filter(screen_name%in%everypol_bundestag$twitter)
 
 #JEREN: Add mentions!!!!!!!!!!!!!!
-tweets_at_politicians=
-  all%>%filter(reply_to_screen_name %in% everypol_bundestag$twitter & !is.na(reply_to_screen_name))
+tweets_at_politicians <- all %>%
+  filter(reply_to_screen_name %in% everypol_bundestag$twitter & 
+           !is.na(reply_to_screen_name))
 
 #merging data
-tweets_by_politicians = left_join(tweets_by_politicians, everypol_bundestag[ , 
-                  c("name", "gender", "group", "facebook", "wikidata", 
-                    "twitter")], by=c("screen_name"="twitter")) 
+tweets_by_politicians <- left_join(tweets_by_politicians, everypol_bundestag[ , 
+                             c("name", "gender", "group", "facebook", 
+                               "wikidata", "twitter")], 
+                             by=c("screen_name"="twitter")) 
 
-tweets_at_politicians = left_join(tweets_at_politicians, everypol_bundestag[ , 
-                                                                             c("name", "gender", "group", "facebook", "wikidata", 
-                                                                               "twitter")], by=c("screen_name"="twitter")) 
-
-
-gl_translate_detect("katten sidder på måtten")
+tweets_at_politicians <- left_join(tweets_at_politicians, everypol_bundestag[ , 
+                                  c("name", "gender", "group", "facebook", 
+                                    "wikidata", "twitter")], 
+                                  by=c("screen_name"="twitter")) 
 
 
 ###################
@@ -63,14 +64,16 @@ gender_bt <- everypol_bundestag %>%
 ## number of tweeting politicians by gender
 gender_twitter <- tweets_by_politicians %>% 
   group_by(gender) %>% 
-  summarise(n_twitter = n_distinct(name.y),perc_bt=(n_distinct(name.y)*100)/length(unique(tweets_by_politicians$name.y)))
+  summarise(n_twitter = n_distinct(name.y),
+            perc_bt=(n_distinct(name.y)*100)/
+              length(unique(tweets_by_politicians$name.y)))
 
 
 ## number of tweets by gender
 gender_tweets <- tweets_by_politicians %>% 
   group_by(gender) %>% 
-  summarise(n_tweets = n(),perc_bt=(n()*100)/nrow(tweets_by_politicians))
-
+  summarise(n_tweets = n(),
+            perc_bt=(n()*100)/nrow(tweets_by_politicians))
 
 ## Plot representation ratio by gender 
 gender_representation <- gender_bt %>% 
@@ -89,7 +92,6 @@ gender_representation <- gender_bt %>%
   ggtitle("Representation by Gender") +
   theme_bw()
 
-
 ## Descriptive Plots
 ## Gender representation by politial party
 gender_bt_groups <- everypol_bundestag %>% 
@@ -104,7 +106,6 @@ gender_bt_party <- everypol_bundestag %>%
   group_by(group, gender) %>% 
   summarise(n_bt = n()) %>% 
   ungroup() 
-
 
 ## Join both datasets and create groupwise ratio
 gender_bt_party <- gender_bt_party %>% 
@@ -123,7 +124,6 @@ gender_bt_plot <- gender_bt_party %>%
   coord_flip() +
   theme_bw() +
   NULL
-
 
 ## Tweets
 ## Gender representation by politial party
@@ -190,7 +190,6 @@ gender_twitter_plot <- gender_twitter_party %>%
 
 
 ## Descriptive statistics of reply to politicans' tweets
-
 gender_reply_groups <- tweets_at_politicians %>% 
   filter(!is.na(gender)) %>%
   group_by(group) %>% 
@@ -241,7 +240,6 @@ grid.arrange(gender_representation, gender_bt_plot, gender_twitter_plot,
              top=textGrob("First descriptive statistics of GESIS data",
                           gp=gpar(fontsize=20 ))) 
   
-
 
 ## Who creates more original content (retweet y/n)
 tweets_politicans %>% 
