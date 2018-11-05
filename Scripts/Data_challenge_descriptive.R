@@ -240,7 +240,6 @@ grid.arrange(gender_representation, gender_bt_plot, gender_twitter_plot,
              top=textGrob("First descriptive statistics of GESIS data",
                           gp=gpar(fontsize=20 ))) 
   
-
 ## Who creates more original content (retweet y/n)
 tweets_politicans %>% 
   group_by(gender) %>% 
