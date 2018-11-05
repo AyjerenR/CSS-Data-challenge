@@ -14,11 +14,11 @@ library(gridExtra)
 library(grid)
 
 #setting path
-current_path <- getActiveDocumentContext()$path 
-setwd(dirname(current_path))
+#current_path <- getActiveDocumentContext()$path 
+#setwd(dirname(current_path))
 
 #lading data
-load("../Data/complete_tweets.RData") 
+#load("../Data/complete_tweets.RData") 
 everypol_bundestag = 
   read_csv("/Users/arminmertens/Desktop/everypolitican_bundestag19.csv", 
            col_names = TRUE) ##getting everypolitican data
@@ -26,11 +26,11 @@ everypol_bundestag =
 twitterpols <- everypol_bundestag %>%
   filter(!is.na(twitter))
 
-tweets_by_politicians <- all %>% 
+tweets_by_politicians <- all.pol %>% 
   filter(screen_name%in%everypol_bundestag$twitter)
 
 #JEREN: Add mentions!!!!!!!!!!!!!!
-tweets_at_politicians <- all %>%
+tweets_at_politicians <- all.pol %>%
   filter(reply_to_screen_name %in% everypol_bundestag$twitter & 
            !is.na(reply_to_screen_name))
 
@@ -45,6 +45,33 @@ tweets_at_politicians <- left_join(tweets_at_politicians, everypol_bundestag[ ,
                                     "wikidata", "twitter")], 
                                   by=c("screen_name"="twitter")) 
 
+
+## Rename and join political parties
+tweets_by_politicians$group <- as.factor(tweets_by_politicians$group) 
+
+tweets_by_politicians$group <- plyr::revalue(tweets_by_politicians$group, 
+                                   c("Alliance '90/The Greens" = "Greens",
+                                     "Alternative for Germany" = "AfD",
+                                     "Christian Democratic Union" = "CDU/CSU",
+                                     "Christian Social Union of Bavaria" = 
+                                       "CDU/CSU",
+                                     "Die Linke" = "Left",
+                                     "Free Democratic Party" = "FDP",
+                                     "Social Democratic Party of Germany" = 
+                                       "SPD"))
+
+## Define party colours
+cols <- c("Left" = "#960E66",
+          "Greens" = "#00A646",
+          "AfD" = "#009FE1",
+          "CDU/CSU" = "#2A2B2C",
+          "FDP" = "#ffed00",
+          "SPD" = "#DF0029")
+
+## Reorder factor levels
+tweets_by_politicians$group <- factor(tweets_by_politicians$group, 
+                                      levels = c("Left", "Greens", "SPD", 
+                                                 "CDU/CSU", "FDP", "AfD"))
 
 ###################
 # Exploring data
@@ -116,7 +143,8 @@ gender_bt_party <- gender_bt_party %>%
 
 ## plot gender ratios by party 
 gender_bt_plot <- gender_bt_party %>% 
-  ggplot(aes(forcats::fct_reorder2(group, gender, ratio), n_bt.x,fill = gender)) + 
+  ggplot(aes(forcats::fct_reorder2(group, gender, ratio), 
+             n_bt.x,fill = gender)) + 
   geom_bar(position = position_fill(reverse = TRUE), stat = "identity") +
   scale_y_continuous(labels = percent_format()) +
   xlab("") + ylab("") + 
@@ -239,6 +267,19 @@ grid.arrange(gender_representation, gender_bt_plot, gender_twitter_plot,
              ncol = 2, nrow = 3,
              top=textGrob("First descriptive statistics of GESIS data",
                           gp=gpar(fontsize=20 ))) 
+
+## Alternative plot with party colours
+gender_tw_party %>% 
+  ggplot(aes(gender, n.x,fill = group)) + 
+  geom_bar(stat = "identity", col = "black") +
+  facet_grid(group ~ .) +
+  scale_fill_manual(values=cols) +
+  xlab("") + ylab("") + 
+  ggtitle("Number of tweets by party and gender") +
+  coord_flip() +
+  theme_bw() +
+  NULL
+
   
 ## Who creates more original content (retweet y/n)
 tweets_politicans %>% 
