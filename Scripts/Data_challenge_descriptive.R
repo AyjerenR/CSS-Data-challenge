@@ -68,6 +68,29 @@ cols <- c("Left" = "#960E66",
           "FDP" = "#ffed00",
           "SPD" = "#DF0029")
 
+## Plot function
+theme_plex <- function(base_size = 11,
+                       strip_text_size = 12,
+                       strip_text_margin = 5,
+                       subtitle_size = 13,
+                       subtitle_margin = 10,
+                       plot_title_size = 18,
+                       plot_title_margin = 10,
+                       ...) {
+  ret <- ggplot2::theme_minimal(base_family = "IBMPlexSans",
+                                base_size = base_size, ...)
+  ret$strip.text <- ggplot2::element_text(hjust = 0, size=strip_text_size,
+                                          margin=margin(b=strip_text_margin),
+                                          family="IBMPlexSans-Medium")
+  ret$plot.subtitle <- ggplot2::element_text(hjust = 0, size=subtitle_size,
+                                             margin=margin(b=subtitle_margin),
+                                             family="IBMPlexSans")
+  ret$plot.title <- ggplot2::element_text(hjust = 0, size = plot_title_size,
+                                          margin=margin(b=plot_title_margin),
+                                          family="IBMPlexSans-Bold")
+  ret
+}
+
 ## Reorder factor levels
 tweets_by_politicians$group <- factor(tweets_by_politicians$group, 
                                       levels = c("Left", "Greens", "SPD", 
@@ -275,9 +298,13 @@ gender_tw_party %>%
   facet_grid(group ~ .) +
   scale_fill_manual(values=cols) +
   xlab("") + ylab("") + 
-  ggtitle("Number of tweets by party and gender") +
+  labs(title = "Number of tweets by party and gender",
+       subtitle = "July 6, 2017 to September 29, 2017") + 
   coord_flip() +
-  theme_bw() +
+  theme_plex() +
+  theme(strip.background = element_blank(),
+  strip.text.y = element_blank())+
+  guides(fill=guide_legend(title="Party")) +
   NULL
 
   
