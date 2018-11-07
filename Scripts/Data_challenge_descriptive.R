@@ -46,6 +46,7 @@ everypol_bundestag$group <- factor(everypol_bundestag$group,
                                       levels = c("Left", "Greens", "SPD", 
                                                  "CDU/CSU", "FDP", "AfD"))
 
+## filter for relevant tweets
 twitterpols <- everypol_bundestag %>%
   filter(!is.na(twitter))
 
@@ -57,7 +58,7 @@ tweets_at_politicians <- all %>%
   filter(reply_to_screen_name %in% everypol_bundestag$twitter & 
            !is.na(reply_to_screen_name))
 
-#merging data
+# merging data
 tweets_by_politicians <- left_join(tweets_by_politicians, everypol_bundestag[ , 
                              c("name", "gender", "group", "facebook", 
                                "wikidata", "twitter")], 
@@ -68,7 +69,6 @@ tweets_at_politicians <- left_join(tweets_at_politicians, everypol_bundestag[ ,
                                     "wikidata", "twitter")], 
                                   by=c("reply_to_screen_name"="twitter")) 
 
-
 ## Define party colours
 cols <- c("Left" = "#960E66",
           "Greens" = "#00A646",
@@ -77,7 +77,7 @@ cols <- c("Left" = "#960E66",
           "FDP" = "#ffed00",
           "SPD" = "#DF0029")
 
-## Plot function
+## Set custom theme
 theme_plex <- function(base_size = 11,
                        strip_text_size = 12,
                        strip_text_margin = 5,
@@ -106,15 +106,12 @@ theme_plex <- function(base_size = 11,
 ####################
 
 # Filter for all relevant tweets (made by politicians)
-#tweets_politicans <- tweets_join %>% 
-#  filter(!is.na(name)) 
-
 ## number of politicans by gender in general 
 gender_bt <- everypol_bundestag %>% 
   filter(!is.na(gender)) %>%
   group_by(gender) %>% 
-  summarise(n_bt = n(),perc_bt=(n()*100)/nrow(everypol_bundestag))
-
+  summarise(n_bt = n(),
+            perc_bt=(n()*100)/nrow(everypol_bundestag))
 
 ## number of tweeting politicians by gender
 gender_twitter <- tweets_by_politicians %>% 
@@ -122,7 +119,6 @@ gender_twitter <- tweets_by_politicians %>%
   summarise(n_twitter = n_distinct(name.y),
             perc_bt=(n_distinct(name.y)*100)/
               length(unique(tweets_by_politicians$name.y)))
-
 
 ## number of tweets by gender
 gender_tweets <- tweets_by_politicians %>% 
@@ -153,7 +149,6 @@ gender_bt_groups <- everypol_bundestag %>%
   filter(!is.na(gender)) %>%
   group_by(group) %>% 
   summarise(n_bt = n())
-
 
 ## Number of politicans by gender in general 
 gender_bt_party <- everypol_bundestag %>% 
@@ -211,7 +206,6 @@ gender_tweets_plot <- gender_tw_party %>%
   coord_flip() +
   theme_bw() +
   NULL
-
 
 ## Twitter
 ## Gender representation by politial party
@@ -289,17 +283,18 @@ fav_plot <- tweets_by_politicians %>%
   theme_bw() +
   NULL
 
-## All plots in one frame
+## Plot all descriptive plots together
 grid.arrange(gender_representation, gender_bt_plot, gender_twitter_plot, 
              gender_tweets_plot, twitter_replys_plot, fav_plot, 
              ncol = 2, nrow = 3,
              top=textGrob("First descriptive statistics of GESIS data",
                           gp=gpar(fontsize=20 ))) 
 
-## Alternative plot with party colours
+
+## Alternative tweet plot with party colours
 gender_tw_plot <- gender_tw_party %>% 
   ggplot(aes(gender, n.x,fill = group)) + 
-  geom_bar(stat = "identity", col = "black") +
+  geom_bar(stat = "identity") +
   facet_grid(group ~ .) +
   scale_fill_manual(values=cols) +
   xlab("") + ylab("") + 
@@ -312,9 +307,10 @@ gender_tw_plot <- gender_tw_party %>%
   guides(fill=guide_legend(title="Party")) +
   NULL
 
+## Alternative reply plot with party colours
 gender_reply_plot <- gender_reply_party %>% 
   ggplot(aes(gender, n.x,fill = group)) + 
-  geom_bar(stat = "identity", col = "black") +
+  geom_bar(stat = "identity") +
   facet_grid(group ~ .) +
   scale_fill_manual(values=cols) +
   xlab("") + ylab("") + 
@@ -327,12 +323,15 @@ gender_reply_plot <- gender_reply_party %>%
   guides(fill=guide_legend(title="Party")) +
   NULL
 
+## get common legend
 legend_tw <- get_legend(gender_tw_plot)
 
+## create base plot
 prow <- plot_grid(gender_tw_plot + theme(legend.position="none"),
                   gender_reply_plot + theme(legend.position="none"),
                   align = 'vh',
                   hjust = -1,
                   nrow = 1)
 
+## plot final tweet / reply plot with common legend 
 plot_grid( prow, legend_tw, rel_widths = c(3, .3))
