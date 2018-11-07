@@ -19,18 +19,40 @@ library(grid)
 
 #lading data
 #load("../Data/complete_tweets.RData") 
-everypol_bundestag = 
-  read_csv("/Users/arminmertens/Desktop/everypolitican_bundestag19.csv", 
+load("/Users/arminmertens/Desktop/complete_tweets.RData")
+
+everypol_bundestag <- 
+read_csv("/Users/arminmertens/Desktop/everypolitican_bundestag19.csv", 
            col_names = TRUE) ##getting everypolitican data
+
+## Rename and join political parties
+everypol_bundestag$group <- as.factor(everypol_bundestag$group) 
+
+everypol_bundestag$group <- plyr::revalue(everypol_bundestag$group, 
+                                    c("Alliance '90/The Greens" = "Greens",
+                                      "Alternative for Germany" = "AfD",
+                                      "Christian Democratic Union" = 
+                                        "CDU/CSU",
+                                      "Christian Social Union of Bavaria" = 
+                                        "CDU/CSU",
+                                      "Die Linke" = "Left",
+                                      "Free Democratic Party" = "FDP",
+                                      "Social Democratic Party of Germany" = 
+                                        "SPD"))
+
+## Reorder factor levels
+everypol_bundestag$group <- factor(everypol_bundestag$group, 
+                                      levels = c("Left", "Greens", "SPD", 
+                                                 "CDU/CSU", "FDP", "AfD"))
 
 twitterpols <- everypol_bundestag %>%
   filter(!is.na(twitter))
 
-tweets_by_politicians <- all.pol %>% 
+tweets_by_politicians <- all %>% 
   filter(screen_name%in%everypol_bundestag$twitter)
 
 #JEREN: Add mentions!!!!!!!!!!!!!!
-tweets_at_politicians <- all.pol %>%
+tweets_at_politicians <- all %>%
   filter(reply_to_screen_name %in% everypol_bundestag$twitter & 
            !is.na(reply_to_screen_name))
 
@@ -43,22 +65,8 @@ tweets_by_politicians <- left_join(tweets_by_politicians, everypol_bundestag[ ,
 tweets_at_politicians <- left_join(tweets_at_politicians, everypol_bundestag[ , 
                                   c("name", "gender", "group", "facebook", 
                                     "wikidata", "twitter")], 
-                                  by=c("screen_name"="twitter")) 
+                                  by=c("reply_to_screen_name"="twitter")) 
 
-
-## Rename and join political parties
-tweets_by_politicians$group <- as.factor(tweets_by_politicians$group) 
-
-tweets_by_politicians$group <- plyr::revalue(tweets_by_politicians$group, 
-                                   c("Alliance '90/The Greens" = "Greens",
-                                     "Alternative for Germany" = "AfD",
-                                     "Christian Democratic Union" = "CDU/CSU",
-                                     "Christian Social Union of Bavaria" = 
-                                       "CDU/CSU",
-                                     "Die Linke" = "Left",
-                                     "Free Democratic Party" = "FDP",
-                                     "Social Democratic Party of Germany" = 
-                                       "SPD"))
 
 ## Define party colours
 cols <- c("Left" = "#960E66",
@@ -91,10 +99,6 @@ theme_plex <- function(base_size = 11,
   ret
 }
 
-## Reorder factor levels
-tweets_by_politicians$group <- factor(tweets_by_politicians$group, 
-                                      levels = c("Left", "Greens", "SPD", 
-                                                 "CDU/CSU", "FDP", "AfD"))
 
 ###################
 # Exploring data
@@ -307,9 +311,18 @@ gender_tw_party %>%
   guides(fill=guide_legend(title="Party")) +
   NULL
 
-  
-## Who creates more original content (retweet y/n)
-tweets_politicans %>% 
-  group_by(gender) %>% 
-  filter(isRetweet == FALSE) %>% 
-  summarise(retweet = sum(retweetCount))
+gender_reply_party %>% 
+  ggplot(aes(gender, n.x,fill = group)) + 
+  geom_bar(stat = "identity", col = "black") +
+  facet_grid(group ~ .) +
+  scale_fill_manual(values=cols) +
+  xlab("") + ylab("") + 
+  labs(title = "Number of replys by party and gender",
+       subtitle = "July 6, 2017 to September 29, 2017") + 
+  coord_flip() +
+  theme_plex() +
+  theme(strip.background = element_blank(),
+        strip.text.y = element_blank())+
+  guides(fill=guide_legend(title="Party")) +
+  NULL
+
