@@ -12,6 +12,7 @@ library(tidyverse)
 library(scales)
 library(gridExtra)
 library(grid)
+library(cowplot)
 
 #setting path
 #current_path <- getActiveDocumentContext()$path 
@@ -296,7 +297,7 @@ grid.arrange(gender_representation, gender_bt_plot, gender_twitter_plot,
                           gp=gpar(fontsize=20 ))) 
 
 ## Alternative plot with party colours
-gender_tw_party %>% 
+gender_tw_plot <- gender_tw_party %>% 
   ggplot(aes(gender, n.x,fill = group)) + 
   geom_bar(stat = "identity", col = "black") +
   facet_grid(group ~ .) +
@@ -311,7 +312,7 @@ gender_tw_party %>%
   guides(fill=guide_legend(title="Party")) +
   NULL
 
-gender_reply_party %>% 
+gender_reply_plot <- gender_reply_party %>% 
   ggplot(aes(gender, n.x,fill = group)) + 
   geom_bar(stat = "identity", col = "black") +
   facet_grid(group ~ .) +
@@ -326,3 +327,12 @@ gender_reply_party %>%
   guides(fill=guide_legend(title="Party")) +
   NULL
 
+legend_tw <- get_legend(gender_tw_plot)
+
+prow <- plot_grid(gender_tw_plot + theme(legend.position="none"),
+                  gender_reply_plot + theme(legend.position="none"),
+                  align = 'vh',
+                  hjust = -1,
+                  nrow = 1)
+
+plot_grid( prow, legend_tw, rel_widths = c(3, .3))
